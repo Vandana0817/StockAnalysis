@@ -2,7 +2,10 @@ import stocks_data as sd
 from moving_averages import compute_moving_averages
 import streamlit as st
 from predictive_analysis import linear_reg
-from datetime import date
+from datetime import date, timedelta
+
+
+st.title("Welcome to stock Analyser")
 
 # ---- Get companies data and put it in the stock selection box ---- #
 companies = sd.get_tickers_data()
@@ -26,6 +29,10 @@ st.header(f'* {ticker_symbol} - {stock_name}*')
 
 # --- Get historical data for selected stock for given date range --- #
 stock_history = sd.get_stock_data(ticker_symbol, start_date, end_date)
+
+# Display if no data fetched for Given date Range
+if stock_history.empty:
+    st.sidebar.error('Error: Could not fetch any data for given date range.')
 
 # --- Display historical data in a table--- #
 st.subheader('Historical Data')
@@ -54,7 +61,8 @@ with st.expander(f'Visualize Moving Averages for {ticker_symbol}', expanded=Fals
             moving_avg = compute_moving_averages(stock_data, 'Adj Close', moving_avg_window)
         else:
             moving_avg = compute_moving_averages(stock_history, 'Adj Close', moving_avg_window)
-        st.line_chart(moving_avg)
+        if not moving_avg.empty:
+            st.line_chart(moving_avg)
 
 # --- Display Predictive analysis--- #
 st.subheader('Predictive Analysis')
@@ -63,15 +71,22 @@ with st.expander(f'View Predictive analysis for {ticker_symbol} based on data fr
     col1, col2, col3 = st.columns(3)
     training_start_date = col1.date_input('Training Model Start date', start_date)
     training_end_date = col2.date_input('Training Model End date', end_date)
-    predictive_days = col3.slider(label='Input Days for prediction', min_value=1, max_value=100, value=5, step=1)
-    if moving_avg_start_date > moving_avg_end_date:
-        st.write('Error: End date should not be before start date.')
+    predict_date = col3.date_input('Date to predict Closing Price', end_date + + timedelta(days=5))
+    if predict_date < training_end_date:
+        st.write('You should select a date to predict which is after the training data end date')
     else:
-        # --- Fetch Stock history data again if user changes inputs--- #
-        if start_date != training_start_date or end_date != training_end_date:
-            stock_data_for_training = sd.get_stock_data(ticker_symbol, training_start_date, training_end_date)
-            fig = linear_reg(stock_data_for_training, predictive_days, stock_name)
+        predictive_days = (predict_date - end_date).days
+        if moving_avg_start_date > moving_avg_end_date:
+            st.write('Error: End date should not be before start date.')
         else:
-            fig = linear_reg(stock_history, predictive_days, stock_name)
-        if not fig is None:
-            st.pyplot(fig)
+            # --- Fetch Stock history data again if user changes inputs--- #
+            if start_date != training_start_date or end_date != training_end_date:
+                stock_data_for_training = sd.get_stock_data(ticker_symbol, training_start_date, training_end_date)
+                root_me, r2e, predict_close, fig = linear_reg(stock_data_for_training, predictive_days, stock_name)
+            else:
+                rme, r2e, predict_close, fig = linear_reg(stock_history, predictive_days, stock_name)
+            col1.success(f'Root Mean Square Error :{rme}')
+            col2.info(f'R2 Error :{r2e}')
+            col3.success(f'Predicted Price :{predict_close}')
+            if not fig is None:
+                st.pyplot(fig)

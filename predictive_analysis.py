@@ -40,5 +40,5 @@ def linear_reg(df_input, input_days, company_name):
         y_predict = regression_model.predict(x_test.reshape(-1, 1))
         x_train = pd.to_datetime(df.index, origin="1970-01-01", unit="D")
         x_test = pd.to_datetime(x_test, origin="1970-01-01", unit="D")
-        compute_rmse_and_r2_values(y_train, y_history)
-        return plot_linear_regression(x_train, x_test, y_history, y_predict, company_name, df, "Close")
+        root_me, r2e = compute_rmse_and_r2_values(y_train, y_history)
+        return root_me, r2e, np.around(y_predict[-1], 2), plot_linear_regression(x_train, x_test, y_history, y_predict, company_name, df, "Close")
