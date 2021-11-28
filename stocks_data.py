@@ -32,4 +32,8 @@ def get_ticker_symbol(companies, stock):
 
 # ----------------- Get Descriptive analysis data for the stock ------------------------------------
 def get_descriptive_analytics(stock_df):
-    return round((stock_df.describe()), 2)
+    descriptive_data = round((stock_df.describe()), 2)
+    descriptive_data = descriptive_data.T
+    descriptive_data['cov'] = round(descriptive_data['std']/descriptive_data['mean'], 2)
+    print(descriptive_data)
+    return descriptive_data.T
