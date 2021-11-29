@@ -69,7 +69,7 @@ with st.expander(f'Visualize Moving Averages for {ticker_symbol}', expanded=Fals
     # --- input start data and end date for Moving average computation --- #
     moving_avg_start_date = col1.date_input('Choose Start date', start_date)
     moving_avg_end_date = col2.date_input('Choose End date', end_date)
-    moving_avg_window = col3.slider(label='Window for Moving Average', min_value=2, max_value=200, value=20, step=1)
+    moving_avg_window = col3.slider(label='Window for Moving Average (N)', min_value=2, max_value=200, value=20, step=1)
     if moving_avg_start_date > moving_avg_end_date:
         st.error('End date should not be before start date.')
     else:
